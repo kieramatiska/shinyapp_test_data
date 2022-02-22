@@ -278,6 +278,68 @@ pivot_longer_vehicle <- vehicle_food_sum %>%
 - Other
 
 
+```{r}
+ethnicity_sub <- food_access %>% 
+  group_by(state, county, urban) %>% 
+  summarize(sum_white_half = sum(lawhitehalf),
+            sum_white_1 = sum(lawhite1),
+            sum_white_10 = sum(lawhite10),
+            sum_white_20 = sum(lawhite20),
+            sum_black_half = sum(lablackhalf),
+            sum_black_1 = sum(lablack1),
+            sum_black_10 = sum(lablack10),
+            sum_black_20 = sum(lablack20),
+            sum_asian_half = sum(laasianhalf),
+            sum_asian_1 = sum(laasian1),
+            sum_asian_10 = sum(laasian10),
+            sum_asian_20 = sum(laasian20),
+            sum_nhopi_half = sum(lanhopihalf),
+            sum_nhopi_1 = sum(lanhopi1),
+            sum_nhopi_10 = sum(lanhopi10),
+            sum_nhopi_20 = sum(lanhopi20),
+            sum_aian_half = sum(laaianhalf),
+            sum_aian_1 = sum(laaian1),
+            sum_aian_10 = sum(laaian10),
+            sum_aian_20 = sum(laaian20),
+            sum_hisp_half = sum(lahisphalf),
+            sum_hisp_1 = sum(lahisp1),
+            sum_hisp_10 = sum(lahisp10),
+            sum_hisp_20 = sum(lahisp20),
+            sum_omultir_half = sum(laomultirhalf),
+            sum_omultir_1 = sum(laomultir1),
+            sum_omultir_10 = sum(laomultir10),
+            sum_omultir_20 = sum(laomultir20))
+
+pivot_eth2 <- ethnicity_sub %>% 
+  pivot_longer(sum_white_half:sum_omultir_20,
+               names_to = "eth_dist",
+               values_to = "count")
+
+write_csv(pivot_eth2, "ethnicity_subset.csv")
+  
+pivot_eth <- ethnicity_sub %>% 
+  pivot_longer(sum_white_half:sum_white_20,
+               names_to = "dist_white",
+               values_to = "num_white") %>% 
+  pivot_longer(sum_black_half:sum_black_20,
+               names_to = "dist_black",
+               values_to = "num_black") %>% 
+  pivot_longer(sum_asian_half:sum_asian_20,
+               names_to = "dist_asian",
+               values_to = "num_asian") %>% 
+  pivot_longer(sum_nhopi_half:sum_nhopi_20,
+               names_to = "dist_nhopi",
+               values_to = "num_nhopi") %>% 
+  pivot_longer(sum_aian_half:sum_aian_20,
+               names_to = "dist_aian",
+               values_to = "num_aian") %>% 
+  pivot_longer(sum_hisp_half:sum_hisp_20,
+               names_to = "dist_hisp",
+               values_to = "num_hisp") 
+  # pivot_longer(sum_omultir_half:sum_omultir_20,
+  #              names_to = "dist_omultir",
+  #              values_to = "num_omultir")
+```
 
 
 
