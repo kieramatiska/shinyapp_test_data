@@ -1,0 +1,289 @@
+---
+title: "Untitled"
+author: "Kiera Matiska"
+date: "2/15/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(tmap)
+library(sf)
+library(janitor)
+library(plotly)
+library(beepr)
+```
+
+
+```{r}
+county_sf <- read_sf(here("US_County_Boundaries copy/US_County_Boundaries.shp")) %>% 
+  clean_names()
+
+county_subset_sf <- county_sf %>% 
+  select(state, county, shape_area)
+```
+
+```{r}
+county_subset_sf %>% st_crs()
+```
+
+```{r}
+x <- ggplot(data = county_subset_sf) +
+  geom_sf(aes(fill = state), color = "white", size = 0.1)
+
+# tmap(county_subset_sf)
+
+# beepr::beep(6)
+```
+
+```{r}
+co_county <- county_subset_sf %>% 
+  filter(state == "Alabama")
+
+county_state_sf <- county_subset_sf %>% 
+  filter(state == "Alaska")
+
+# ggplot(data = county_state_sf) +
+#   geom_sf(aes(fill = county, color = "white", size = 0.1))
+# 
+# tmap_mode(mode = "view")
+# 
+# tm_shape(county_state_sf) +
+#   tm_fill("county") +
+#   tm_borders(col = "black")
+# 
+# beepr::beep(6)
+```
+
+
+
+```{r}
+food_access <- read_csv("food_access_subset copy.csv") %>% 
+  drop_na() %>% 
+  mutate(income = median_family_income)
+```
+
+income_snap_table <- reactive({
+    food_access %>% 
+      filter(income == input$median_family_income, state == input$state) %>% 
+      mutate(median_family_income = case_when(
+        median_family_income >= "0" ~ "1",
+        median_family_income >= "25000" ~ "2",
+        median_family_income >= "50000" ~ "3",
+        median_family_income >= "75000" ~ "4",
+        median_family_income >= "100000" ~ "5"
+      ))
+      
+      
+```{r}
+income_snap_table <- food_access %>% 
+  mutate(income = case_when(
+    income >= "0" & income < "25000" ~ "1",
+    income >= "25000" & income < "50000" ~ "2",
+    income >= "50000" & income < "75000" ~ "3",
+    income >= "75000" & income < "100000" ~ "4",
+    income >= "100000" & income < "125000" ~ "5",
+    income >= "125000" & income < "150000" ~ "6",
+    income >= "150000" & income < "175000" ~ "7",
+    income >= "175000" & income < "200000" ~ "8",
+    income >= "200000" & income < "225000" ~ "9",
+    income >= "225000" & income <= "250000" ~ "10"
+  )) %>% 
+  group_by(state, income) %>% 
+  summarize(total_pop = sum(pop2010),
+            sum_snap = sum(tract_snap))
+```
+
+Bargraph displaying which the population count for different ethnicities that are beyond 10 miles from a supermarket
+
+Ethnicities:
+
+- White 
+- African American
+- Asian
+- Native Hawaiian or other Pacific Islander
+- American Indian or Alaska Native
+- Hispanic
+- Other
+
+```{r}
+# white
+eth_white_sub <- food_access %>% 
+  select(state, urban, lawhitehalf, lawhite1, lawhite10, lawhite20) %>% 
+  group_by(state) %>% 
+  summarize(sum_white_half = sum(lawhitehalf),
+            sum_white_1 = sum(lawhite1),
+            sum_white_10 = sum(lawhite10),
+            sum_white_20 = sum(lawhite20))
+
+# black
+eth_black_sub <- food_access %>% 
+  select(state, urban, lablackhalf, lablack1, lablack10, lablack20) %>% 
+  group_by(state) %>% 
+  summarize(sum_black_half = sum(lablackhalf),
+            sum_black_1 = sum(lablack1),
+            sum_black_10 = sum(lablack10),
+            sum_black_20 = sum(lablack20))
+
+#asian
+eth_asian_sub <- food_access %>% 
+  select(state, urban, laasianhalf, laasian1, laasian10, laasian20) %>% 
+  group_by(state) %>% 
+  summarize(sum_asian_half = sum(laasianhalf),
+            sum_asian_1 = sum(laasian1),
+            sum_asian_10 = sum(laasian10),
+            sum_asian_20 = sum(laasian20))
+
+# Native Hawaiian or other Pacific Islander
+eth_nhopi_sub <- food_access %>% 
+  select(state, urban, lanhopihalf, lanhopi1, lanhopi10, lanhopi20) %>% 
+  group_by(state) %>% 
+  summarize(sum_nhopi_half = sum(lanhopihalf),
+            sum_nhopi_1 = sum(lanhopi1),
+            sum_nhopi_10 = sum(lanhopi10),
+            sum_nhopi_20 = sum(lanhopi20))
+
+# American Indian or Alaska Native
+eth_aian_sub <- food_access %>% 
+  select(state, urban, laaianhalf, laaian1, laaian10, laaian20) %>% 
+  group_by(state) %>% 
+  summarize(sum_aian_half = sum(laaianhalf),
+            sum_aian_1 = sum(laaian1),
+            sum_aian_10 = sum(laaian10),
+            sum_aian_20 = sum(laaian20))
+
+# Hispanic
+eth_hisp_sub <- food_access %>% 
+  select(state, urban, lahisphalf, lahisp1, lahisp10, lahisp20) %>% 
+  group_by(state) %>% 
+  summarize(sum_hisp_half = sum(lahisphalf),
+            sum_hisp_1 = sum(lahisp1),
+            sum_hisp_10 = sum(lahisp10),
+            sum_hisp_20 = sum(lahisp20))
+
+eth_omultir_sub <- food_access %>% 
+  select(state, urban, laomultirhalf, laomultir1, laomultir10, laomultir20) %>% 
+  group_by(state) %>% 
+  summarize(sum_omultir_half = sum(laomultirhalf),
+            sum_omultir_1 = sum(laomultir1),
+            sum_omultir_10 = sum(laomultir10),
+            sum_omultir_20 = sum(laomultir20))
+```
+
+merge the two data sets
+
+```{r}
+# determine whether each county is more urban or rural
+rur_urb_al <- 
+
+rur_urb_food <- food_access %>% 
+  group_by(state, county) %>% 
+  summarize(mean_urban = mean(urban),
+            total_pop = sum(pop2010))
+
+rur_urb_type <- rur_urb_food %>% 
+  mutate(type = case_when(
+    mean_urban < "0.5" ~ "Rural",
+    mean_urban >= "0.5" ~ "Urban"
+  ))
+```
+
+
+```{r}
+county_subset_df <- county_subset_sf %>% 
+  as.data.frame()
+
+sf_merge <- merge(rur_urb_type, county_subset_df)
+
+rur_urb_geom_sf <- st_sf(sf_merge)
+
+# ca_counties_df <- ca_counties_sf %>% 
+#   as.data.frame() %>% 
+#   select(-geometry)
+# only use this if you need to make a data frame
+```
+
+Export to shape file
+
+```{r}
+st_write(nc, paste0(tempdir(), "/", "nc.shp"))
+
+st_write(rur_urb_geom_sf, "rur_urb_geom_sf.shp")
+
+st_write(rur_urb_geom_sf, file = "rur_urb_geom_sf.shp")
+```
+
+## New subset for widget 4
+
+These columns:
+
+- LATracts_half
+- LATracts1
+- LATracts10
+- LATracts20
+- LATractsVehicle_20
+- lapophalf
+- lahunvhalf
+- lapop1
+- lahunv1
+- lapop10
+- lahunv10
+- lapop20
+- lahunv20
+- TractHUNV
+
+```{r}
+vehicle_food <- food_access %>% 
+  select(state, county, urban, pop2010, lapophalf, lapop1, lapop10, lapop20, starts_with("lahunv"), tract_hunv)
+
+vehicle_food_urb <- vehicle_food %>% 
+  mutate(urban = case_when(
+    urban == "1" ~ "Urban",
+    urban == "0"~ "Rural"
+  ))
+
+vehicle_food_sum <- vehicle_food_urb %>% 
+  group_by(state, county, urban) %>% 
+  summarize(tot_pop = round(sum(pop2010), 0),
+            pop_half = round(sum(lapophalf), 0),
+            pop1 = round(sum(lapop1), 0),
+            pop10 = round(sum(lapop10), 0),
+            pop20 = round(sum(lapop20), 0),
+            vehicle_half = round(sum(lahunvhalf), 0),
+            vehicle1 = round(sum(lahunv1), 0),
+            vehicle10 = round(sum(lahunv10), 0),
+            vehicle20 = round(sum(lahunv20), 0),
+            sum_tract = sum(tract_hunv))
+
+write_csv(vehicle_food_sum, "vehicle_food_subset.csv")
+```
+
+```{r}
+pivot_longer_vehicle <- vehicle_food_sum %>% 
+  pivot_longer(vehicle_half:vehicle20) %>% 
+  select(-sum_tract)
+```
+
+# New Ethnicity Subset
+
+- White 
+- African American
+- Asian
+- Native Hawaiian or other Pacific Islander
+- American Indian or Alaska Native
+- Hispanic
+- Other
+
+
+
+
+
+
+      
+      
+      
+      
+
